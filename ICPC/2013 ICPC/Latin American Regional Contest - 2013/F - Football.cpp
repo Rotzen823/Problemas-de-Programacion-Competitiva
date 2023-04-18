@@ -58,7 +58,7 @@ int main() {
         }
     }
 
-cout << res << "\n";
+    cout << res << "\n";
 
     return 0;
 }
