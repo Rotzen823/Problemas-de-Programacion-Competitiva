@@ -1,28 +1,35 @@
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
 #define MOD 1000000007
- 
+
 using namespace std;
 
 typedef long long ll;
 
-ll bin(ll a, ll n){
-	ll res=1;
-	while(n>0){
-		if(n%2) res=(res%MOD) * (a%MOD);
-		a=(a%MOD) * (a%MOD);
-		n/=2;
-	}
-	return res;
+ll modpow(ll x, ll n, ll m) {
+    if (n == 0)
+        return 1;
+
+    ll u = modpow(x, n/2, m);
+    u = (u * u) % m;
+    if (n % 2 == 1){
+        u = (u * x) % m;
+    }
+
+    return u;
 }
- 
-int main(){
-	ll k,pot=2,res;
-	cin>>k;
-	while(--k){
-		pot*=2;
-	}
-	pot-=2;
-	res=bin(4,pot);
-	res = ((res%MOD) * 6)%MOD;
-	cout<<res<<"\n";
+
+int main() { 
+    ios_base::sync_with_stdio(0);
+    cin.tie(0); cout.tie(0);
+
+    ll k, res;
+	cin >> k;
+	ll pot = (1LL << k) - 2;
+
+    res = modpow(4, pot, MOD);
+    res = (res * 6) % MOD;
+
+    cout << res << "\n";
+
+    return 0;
 }
