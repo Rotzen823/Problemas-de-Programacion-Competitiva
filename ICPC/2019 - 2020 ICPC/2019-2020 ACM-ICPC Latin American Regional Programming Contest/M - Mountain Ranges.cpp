@@ -1,38 +1,29 @@
-#include<iostream>
-#include <vector>
+#include <bits/stdc++.h>
  
 using namespace std;
  
 int main(){
-	
-	int n, m, max = 1;
-	
-	cin>>n>>m;
-	vector<int> Ar(n);
-	
-	for(int i = 0; i < n; i++){
-		cin>>Ar[i];
-	}
-	
-	int ax = 1;
-	
-	for(int i = 1; i < n; i++){
-		if(Ar[i-1] >= Ar[i]-m){
-			ax++;
-		}
-		else if(ax > max){
-			max = ax;
-			ax = 1;
-		}
-		else{
-			ax = 1;
-		}
-	}
-	if(ax > max){
-		max = ax;
-	}
-	
-	cout<<max;
-	
-	return 0;
+    int n, x, an, act, c = 1, may = 1;
+ 
+    cin >> n >> x;
+    cin >> an;
+ 
+    for(int k = 1; k < n; k++){
+        cin >> act;
+        if(an + x >= act){
+            c++;
+            if(c > may){
+                may = c;
+            }
+        }
+        else{
+            c = 1;
+        }
+        
+        an = act;
+    }
+ 
+    cout << may << "\n";
+ 
+    return 0;
 }
