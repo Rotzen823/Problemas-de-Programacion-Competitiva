@@ -1,53 +1,36 @@
-#include<bits/stdc++.h>
-#define MAX 1000005
+#include <bits/stdc++.h>
  
 using namespace std;
  
-bool lista [MAX][30];
-vector <bool> existL (30, false);
- 
 int main(){
+    ios_base::sync_with_stdio(0);
+    cin.tie(0); cout.tie(0);
+    
     int n;
     cin >> n;
- 
+    string pal[n];
+    bool let[26] = {0};
+
     for(int k = 0; k < n; k++){
-        string ax;
-        cin >> ax;
-        
-        for(char x : ax){
-            lista[k][x - 'A'] = true;
-        }
- 
-        existL[ax[0] - 'A'] = true;
+        cin >> pal[k];
+        let[pal[k][0] - 'A'] = true;
     }
-    
-    bool b;
- 
-    vector<int> letFal;
- 
-    for(int k = 0; k < 26; k++){
-        if(!existL[k]){
-            letFal.push_back(k);
-        }
-    }
-    
+
     for(int k = 0; k < n; k++){
-        b = true;
-        
-        for(int x : letFal){
-            if(lista[k][x]){
-                b = false;
+        bool flag = true;
+        for(char x : pal[k]){
+            if(!let[x - 'A']){
+                flag = false;
                 break;
             }
         }
- 
-        if(b){
+        
+        if(flag){
             cout << "Y\n";
             return 0;
         }
     }
- 
+
     cout << "N\n";
- 
     return 0;
 }
