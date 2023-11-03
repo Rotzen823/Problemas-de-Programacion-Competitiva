@@ -59,32 +59,24 @@ int main(){
  
         int diaD = diaAtras(d, x);
  
-        if(diaD == 2){
-            if(x > 30){
-                x -= 30;
-                diaD = 4;
-            }
+        if(diaD == 2 && x > 30){
+            x -= 30;
+            diaD = 4;
         }
  
-        if(diaD == 4){
-            if(x > 32){
-                x -= 32;
-                diaD = 1;
-            }
+        if(diaD == 4 && x > 32){
+            x -= 32;
+            diaD = 1;
         }
  
-        if(diaD == 3){
-            if(x > 30){
-                x -= 30;
-                diaD = 5;
-            }
+        if(diaD == 3 && x > 30){
+            x -= 30;
+            diaD = 5;
         }
  
-        if(diaD == 5){
-            if(x > 31){
-                x -= 31;
-                diaD = 1;
-            }
+        if(diaD == 5 && x > 31){
+            x -= 31;
+            diaD = 1;
         }
  
         if(diaD == 1){
@@ -107,13 +99,10 @@ int main(){
         else if(diaD == 5){
             res++;
         }
- 
-        if(res < men){
-            men = res;
-        }
+
+        men = min(res, men);
     }
  
     cout << men << "\n";
     return 0;
 }
-
