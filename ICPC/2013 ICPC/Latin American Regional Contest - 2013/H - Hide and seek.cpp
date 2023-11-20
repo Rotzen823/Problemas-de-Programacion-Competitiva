@@ -50,60 +50,21 @@ point translate(const point &p, const vec &v) {  // translate p
   return point(p.x+v.x, p.y+v.y);                // according to v
 }  
 
-
 //Producto punto
 int dot(vec a, vec b) { return (a.x*b.x + a.y*b.y); }
+
+// returns the cross product of two vectors a and b
+double cross(vec a, vec b) { return a.x*b.y - a.y*b.x; }
 
 // returns the squared value of the normalized vector
 double norm_sq(vec v) { return v.x*v.x + v.y*v.y; }
 
-//Linea
-struct line { double a, b, c; };  // most versatile
-
-// the answer is stored in the third parameter (pass by reference)
-void pointsToLine(point p1, point p2, line &l) {
-    if (fabs(p1.x-p2.x) < EPS)                     // vertical line is fine
-      l = {1.0, 0.0, -p1.x};                       // default values
-    else {
-      double a = -(double)(p1.y-p2.y) / (p1.x-p2.x);
-      l = {a, 1.0, -(double)(a*p1.x) - p1.y};      // NOTE: b always 1.0
-    }
-}
-
-bool areParallel(line l1, line l2) {             // check a & b
-  return (fabs(l1.a-l2.a) < EPS) && (fabs(l1.b-l2.b) < EPS);
-}
-
-bool areSame(line l1, line l2) {                 // also check  c
-  return areParallel(l1 ,l2) && (fabs(l1.c-l2.c) < EPS);
-}
-
-// returns true (+ intersection point p) if two lines are intersect
-bool areIntersect(line l1, line l2, point &p) {
-  if (areParallel(l1, l2)) return false;         // no intersection
-  // solve system of 2 linear algebraic equations with 2 unknowns
-  p.x = (l2.b*l1.c - l1.b*l2.c) / (l2.a*l1.b - l1.a*l2.b);
-  // special case: test for vertical line to avoid division by zero
-  if (fabs(l1.b) > EPS) p.y = -(l1.a*p.x + l1.c);
-  else                  p.y = -(l2.a*p.x + l2.c);
-  return true;
-}
-
-// angle aob in rad
-double angle(const point &a, const point &o, const point &b) {
-    vec oa = toVec(o, a), ob = toVec(o, b);        // a != o != b
-    return acos(dot(oa, ob) / sqrt(norm_sq(oa) * norm_sq(ob)));
-}
-
-double angleComp(const point &o, const point &a){
-	point ref = o;
-	ref.x++;
-	double ang = angle(ref, o, a);
-	if(a.y < o.y){
-		ang = (2.0 * PI) - ang;
-	}
-
-	return ang;
+//Devuelve el angulo de a respecto a la linea horizontal que pasa por o
+//Usado para Sweep Radain
+double polarAngle(point p1, point p2){
+	double x = p1.x - p2.x, y = p1.y - p2.y;
+    double a = atan2(y, x);
+    return a < 0 ? a + 2 * PI : a;
 }
 
 // returns the distance from p to the line defined by
@@ -134,44 +95,34 @@ double distToLineSegment(point p, point a, point b, point &c) {
   return distToLine(p, a, b, c);                 // use distToLine
 }
 
+bool segIntersects(point a, point b, point p, point q)
+{   
+	vec ab = toVec(a, b), pq = toVec(p, q);
+	vec A = toVec(point(0, 0), a), P = toVec(point(0, 0), p);
+
+    double k1 = (cross(A, pq) - cross(P, pq)) * 1.0 / cross(pq, ab);
+    double k2 = (cross(A, ab) - cross(P, ab)) * 1.0 / cross(pq, ab);
+    return k1 >= 0 && k1 <= 1 && k2 >= 0 && k2 <= 1;
+}
+
 point puntos[MAX];
 pair<point, point> lineas[MAX];
+point pivot;
 
-bool intersectSegment(point a, point b, point c, point d){
-    double x1 = a.x, x2 = b.x, x3 = c.x, x4 = d.x;
-    double y1 = a.y, y2 = b.y, y3 = c.y, y4 = d.y;
-    line l1, l2;
+struct comp{
+    bool operator() (const int& a, const int& b){
+        point u = lineas[a].first, v = lineas[a].second; //seg uv
+        point p = lineas[b].first, q = lineas[b].second; //seg pq
 
-    pointsToLine(a, b, l1);
-    pointsToLine(c, d, l2);
-
-    if(x1 > x2){
-        swap(x1, x2);
-    }
-    if(y1 > y2){
-        swap(y1, y2);
-    }
-    if(x3 > x4){
-        swap(x3, x4);
-    }
-    if(y3 > y4){
-        swap(y3, y4);
-    }
-
-    point p;
-    if(areSame(l1, l2)){
-        return !(x1 > x4 || x2 < x3 || y1 > y4 || y2 < y3);
-    }
-    else if(areIntersect(l1, l2, p)){
-        return p.x >= x1 && p.x <= x2 && p.y >= y1 && p.y <= y2 &&
-        p.x >= x3 && p.x <= x4 && p.y >= y3 && p.y <= y4;
-    }
-    return false;
-}
+        if (cross(toVec(pivot, u), toVec(pivot, p)) > 0)
+            return segIntersects(u, v, pivot, p);
+        return !segIntersects(u, pivot, p, q);
+    } 
+};
  
 int main(){
-    //ios_base::sync_with_stdio(0);
-    //cin.tie(0); cout.tie(0);
+    ios_base::sync_with_stdio(0);
+    cin.tie(0); cout.tie(0);
     
     int s, k, w;
     cin >> s >> k >> w;
@@ -186,67 +137,56 @@ int main(){
     }
 
     for(int i = 0; i < s; i++){
+        pivot = puntos[i];
         vector<pair<double, ii> > events;
 
-        vector<double> distW(w);
-        set<pair<double, int> > segments;
+        set<int, comp> segments;
 
         for(int j = 0; j < w; j++){
-            double angP1 = angleComp(puntos[i], lineas[j].first);
-            double angP2 = angleComp(puntos[i], lineas[j].second);
-            point ax;
-            distW[j] = distToLineSegment(puntos[i], lineas[j].first, lineas[j].second, ax);
+            if(cross(toVec(pivot, lineas[j].first), toVec(pivot, lineas[j].second)) < 0){
+                swap(lineas[j].first, lineas[j].second);
+            }
+            double angP1 = polarAngle(pivot, lineas[j].first);
+            double angP2 = polarAngle(pivot, lineas[j].second);
 
             if(angP1 > angP2){
-                swap(angP1, angP2);
+                segments.insert(j);
             }
 
-            if(angP1 <= (PI / 2.0) && angP2 >= (3 * (PI / 2.0))){
-                segments.insert({distW[j], j});
-            }
-
-            if((angP2 - angP1) < PI){
-                events.push_back({angP1, ii(0, j)});
-                events.push_back({angP2, ii(2, j)});
-            }
-            else{
-                events.push_back({angP2, ii(0, j)});
-                events.push_back({angP1, ii(2, j)});
-            }
+            events.push_back({angP1, ii(0, j)});
+            events.push_back({angP2, ii(2, j)});
         }
 
         for(int j = 0; j < k; j++){
             if(j == i){
                 continue;
             }
-            double ang = angleComp(puntos[i], puntos[j]);
+            double ang = polarAngle(pivot, puntos[j]);
             events.push_back({ang, ii(1, j)});
         }
 
         sort(events.begin(), events.end());
         
         int res = 0;
-        //cout << i << " " << segments.size() << "\n";
         for(int j = 0; j < (int) events.size(); j++){
-            //cout << j << " " << events[j].second.first << " " << events[j].second.second << "\n";
             int id = events[j].second.second;
             int l;
             switch (events[j].second.first){
                 case 0:
-                segments.insert({distW[id], id});
+                segments.insert(id);
                 break;
                 case 1:
                 if(segments.empty()){
                     res++;
                     continue;
                 }
-                l = segments.begin() -> second;
-                if(!intersectSegment(lineas[l].first, lineas[l].second, puntos[i], puntos[id])){
+                l = *segments.begin();
+                if(!segIntersects(lineas[l].first, lineas[l].second, pivot, puntos[id])){
                     res++;
                 }
                 break;
                 case 2:
-                segments.erase({distW[id], id});
+                segments.erase(id);
                 break;
             }
         }
