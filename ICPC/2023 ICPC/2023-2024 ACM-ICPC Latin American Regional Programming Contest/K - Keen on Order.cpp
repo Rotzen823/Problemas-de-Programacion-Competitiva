@@ -12,46 +12,55 @@ typedef vector<ii> vii;
 int n, k;
 vi v, res;
  
-int memoN[MAX][MAX];
-int memo[16777216];
+int nxt[MAX][MAX];
+int memo[1 << 24];
  
-int next(int A, int i){
-    if(i >= n){
-        return INF;
-    }
- 
-    if(v[i] == A){
-        return i;
-    }
- 
-    if(memoN[A][i] != -1){
-        return memoN[A][i];
-    }
- 
-    return memoN[A][i] = next(A, i + 1);
-}
- 
-int dp(int mask){
-    if(mask == 0){
-        return -1;
-    }
- 
-    if(memo[mask] != -1){
-        return memo[mask];
-    }
-    
-    int ans = 0;
-    for(int i = 0; i < k; i++){
-        if(mask & (1 << i)){
-            int ax = dp(mask & ~(1 << i));
-            //cout << mask << " " << i + 1 << " " << ax + 1 << " ";
-            //cout << next(i, ax + 1) << "\n";
-            ans = max(ans, next(i, ax + 1));
+void next(){
+    for(int i = 0; i < MAX;  i++){
+        for(int j = 0; j < MAX; j++){
+            nxt[i][j] = INF;
         }
     }
+
+    for(int A = 0; A < k; A++){
+        int ax = INF;
+        for(int i = n - 1; i >= 0; i--){
+            if(v[i] == A){
+                ax = i;
+            }
+            nxt[A][i] = ax;
+        }
+    }
+}
  
-    //cout << mask << ": " << ans << "\n";
-    return memo[mask] = ans;
+bool dp(){
+    int res = -1;
+    for(int mask = 1; mask < (1 << k); mask++){
+        for(int i = 0; i < k; i++){
+            if(mask & (1 << i)){
+                int ax = memo[mask & ~(1 << i)];
+                memo[mask] = max(memo[mask], nxt[i][ax + 1]);
+            }
+        }
+        
+        if(memo[mask] == INF){
+            res = mask;
+            break;
+        }
+    }
+
+    if(res == -1){
+        return false;
+    }
+
+    for(int i = 0; i < k; i++){
+        if(!(res & (1 << i))){
+            res |= (1 << i);
+            memo[res] = INF;
+        }
+    }
+
+    return true;
 }
  
 void busq(int mask){
@@ -60,14 +69,18 @@ void busq(int mask){
     }
  
     int j = -1;
-    for(int i = 0; i < k; i++){
+    for(int i = k - 1; i >= 0; i--){
         if(mask & (1 << i)){
-            int ax = dp(mask & ~(1 << i));
-            if(dp(mask) == next(i, ax + 1)){
+            int ax = memo[mask & ~(1 << i)];
+            if(memo[mask] == nxt[i][ax + 1]){
                 j = i;
                 break;
             }
         }
+    }
+
+    if(j == -1){
+        return;
     }
     
     busq(mask & ~(1 << j));
@@ -79,8 +92,6 @@ int main(){
     cin.tie(0); cout.tie(0);
  
     cin >> n >> k;
- 
-    memset(memoN, -1, sizeof(memoN));
     memset(memo, -1, sizeof(memo));
  
     v.assign(n, 0);
@@ -89,14 +100,7 @@ int main(){
         v[i]--;
     }
  
-    /*for(int A = 0; A < k; A++){
-        for(int i = 0; i < n; i++){
-            cout << next(A, i) << " ";
-        }
-        cout << "\n";
-    }*/
- 
-    if(k >= 21){
+    if(k >= 25){
         vector<bool> flags;
         int st = 0;
  
@@ -142,8 +146,8 @@ int main(){
         }
     }
     else{
-        int ans = dp((1 << k) - 1);
-        if(ans != INF){
+        next();
+        if(!dp()){
             cout << "*\n";
             return 0;
         }
