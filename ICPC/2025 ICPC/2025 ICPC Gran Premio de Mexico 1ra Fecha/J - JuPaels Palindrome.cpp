@@ -1,3 +1,4 @@
+// Pura Gente del Coach Moy
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -10,12 +11,14 @@ using namespace std;
 #define forn(i, n) for(int i = 0; i < n; i++)
 #define forns(i, s, n) for(int i = s; i < n; i++)
 #define ENDL '\n'
-#define INF 10000000000000
+#define INF 1000000000
 #define MOD 1000000007
 #define MAX 1005
+#define LOG 20
 
 typedef long long ll;
 typedef vector<int> vi;
+typedef vector<ll> vll;
 typedef pair<int, int> ii;
 typedef vector<ii> vii;
 
@@ -26,7 +29,7 @@ int main() {
     int n;
     string s;
     cin >> n >> s;
-    vi lastAppear(1 << 26, -1);
+    vi firstAppear(1 << 26, -1);
 
     int mask = 0, ans = 1;
 
@@ -36,25 +39,25 @@ int main() {
 
         if(mask == 0 || __builtin_popcount(mask) == 1){
             ans = i + 1;
-            if(lastAppear[mask] == -1){
-                lastAppear[mask] = i;
+            if(firstAppear[mask] == -1){
+                firstAppear[mask] = i;
             }
             continue;
         }
         
-        if(lastAppear[mask] != -1){
-            ans = max(ans, i - lastAppear[mask]);
+        if(firstAppear[mask] != -1){
+            ans = max(ans, i - firstAppear[mask]);
         }
 
         for(int j = 0; j < 26; j++){
             int maskAux = mask ^ (1 << j);
-            if(lastAppear[maskAux] != -1){
-                ans = max(ans, i - lastAppear[maskAux]);
+            if(firstAppear[maskAux] != -1){
+                ans = max(ans, i - firstAppear[maskAux]);
             }
         }
 
-        if(lastAppear[mask] == -1){
-            lastAppear[mask] = i;
+        if(firstAppear[mask] == -1){
+            firstAppear[mask] = i;
         }
     }
 
