@@ -1,3 +1,4 @@
+// Pura Gente del Coach Moy
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -10,88 +11,59 @@ using namespace std;
 #define forn(i, n) for(int i = 0; i < n; i++)
 #define forns(i, s, n) for(int i = s; i < n; i++)
 #define ENDL '\n'
-#define INF 1000000000
+#define INF2 1000000000
 #define MOD 1000000007
 #define MAX 1005
+#define LOG 20
 
 typedef long long ll;
 typedef vector<int> vi;
+typedef vector<ll> vll;
 typedef pair<int, int> ii;
 typedef vector<ii> vii;
 
-struct Ford_Fulkerson{
-    using F = ll;
-    struct Edge { int to; F flo, cap; };
-    int N;
-    vector<Edge> eds;
-    vector<vi> adj;
-    vector<bool> ready;
- 
-    void init(int _N) { N = _N; adj.resize(N);}
-    void ae(int u, int v, F cap, F rcap = 0) { assert(min(cap,rcap) >= 0);
-        adj[u].push_back(eds.size()); eds.push_back({v, 0, cap});
-        adj[v].push_back(eds.size()); eds.push_back({u, 0, rcap});
+template<typename T>
+struct Dinic {
+  #define INF numeric_limits<T>::max()
+  struct Edge {
+    int to, rev;
+    T c, oc;
+    T flow() { return max(oc - c, T(0)); }  // if you need flows
+  };
+  vi lvl, ptr, q;
+  vector<vector<Edge>> adj;
+  Dinic(int n) : lvl(n), ptr(n), q(n), adj(n) {}
+  void addEdge(int a, int b, T c, T rcap = 0) {
+    adj[a].push_back({b, sz(adj[b]), c, c});
+    adj[b].push_back({a, sz(adj[a]) - 1, rcap, rcap});
+  }
+  T dfs(int v, int t, T f) {
+    if (v == t || !f) return f;
+    for (int& i = ptr[v]; i < sz(adj[v]); i++) {
+      Edge& e = adj[v][i];
+      if (lvl[e.to] == lvl[v] + 1) if (T p = dfs(e.to, t, min(f, e.c))) {
+        e.c -= p, adj[e.to][e.rev].c += p;
+        return p;
+      }
     }
- 
-    F dfs(int v, int t, F flo) {
-        if (v == t) return flo;
-        ready[v] = true;
-        for (int x : adj[v]) {
-            Edge& E = eds[x];
-            if (E.flo == E.cap || ready[E.to]) continue;
-            F df = dfs(E.to,t,min(flo,E.cap-E.flo));
-            if (df) { E.flo += df; eds[x^1].flo -= df;
-                return df; } // saturated >=1 one edge
-        }
-        return 0;
+    return 0;
+  }
+  T calc(int s, int t) {
+    T flow = 0;
+    q[0] = s;
+    forns(L, 0, 31) do {  // 'int L=30' maybe faster for random data
+      lvl = ptr = vi(sz(q));
+      int qi = 0, qe = lvl[s] = 1;
+      while (qi < qe && !lvl[t]) {
+        int v = q[qi++];
+        for (Edge e : adj[v]) if (!lvl[e.to] && e.c >> (30 - L)) q[qe++] = e.to, lvl[e.to] = lvl[v] + 1;
+      }
+      while (T p = dfs(s, t, INF)) flow += p;
     }
- 
-    F maxFlow(int s, int t) {
-        F tot = 0;
-        while (true){
-            ready.assign(N, false);
-            F df = dfs(s,t,numeric_limits<F>::max());
-            if(!df){
-                break;
-            }
-            tot += df;
-        } 
-        return tot;
-    }
- 
-    vii minimumCut(int s, int t){
-        maxFlow(s, t);
-        vii minCut;
-        ready.assign(N, false);
-        dfs2(s);
-        
-        for(int i = 0; i < N; i++){
-            if(ready[i]){
-                //cout << i << ENDL;
-                for(int v : adj[i]){
-                    //cout << " - " << eds[v].to << ' ' << ready[eds[v].to] << ' ' << v << ENDL;
-                    if(!ready[eds[v].to]){
-                        minCut.pb({i + 1, eds[v].to + 1});
-                    }
-                }
-            }
-        }
- 
-        return minCut;
-    }
- 
-    void dfs2(int u){
-        if(ready[u]){
-            return;
-        }
- 
-        ready[u] = true;
-        for(int v : adj[u]){
-            if(eds[v].flo < eds[v].cap){
-                dfs2(eds[v].to);
-            }
-        }
-    }
+    while (lvl[t]);
+    return flow;
+  }
+  bool leftOfMinCut(int a) { return lvl[a] != 0; }
 };
 
 int main() {
@@ -103,30 +75,29 @@ int main() {
 
     vi value(n);
 
-    Ford_Fulkerson graph;
-    graph.init(n + 2);
+    Dinic<int> graph(n + 2);
 
     for(int i = 0; i < n; i++){
         cin >> value[i];
         if(value[i] >= 0){
-            graph.ae(0, i + 1, value[i]);
+            graph.addEdge(0, i + 1, value[i]);
         }
         else{
-            graph.ae(i + 1, n + 1, -value[i]);
+            graph.addEdge(i + 1, n + 1, -value[i]);
         }
     }
 
     while(m--){
         int a, b;
         cin >> a >> b;
-        graph.ae(b, a, INF);
+        graph.addEdge(b, a, INF2);
     }
 
-    graph.minimumCut(0, n + 1);
+    graph.calc(0, n + 1);
 
     int ans = 0;
     for(int i = 1; i <= n; i++){
-        if(graph.ready[i]){
+        if(graph.leftOfMinCut(i)){
             ans += value[i - 1];
         }
     }
