@@ -1,3 +1,4 @@
+// Pura Gente del Coach Moy
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -10,13 +11,15 @@ using namespace std;
 #define forn(i, n) for(int i = 0; i < n; i++)
 #define forns(i, s, n) for(int i = s; i < n; i++)
 #define ENDL '\n'
-#define INF 10000000000000
-#define MOD 998244353
-#define MAX 100005
+#define INF 1000000000
+#define MOD 1000000007
+#define MAX 1005
+#define LOG 20
 
 typedef long long ll;
 typedef vector<int> vi;
-typedef pair<ll, ll> ii;
+typedef vector<ll> vll;
+typedef pair<int, int> ii;
 typedef vector<ii> vii;
 
 int main() {
