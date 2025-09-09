@@ -1,3 +1,4 @@
+// Pura Gente del Coach Moy
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -13,9 +14,11 @@ using namespace std;
 #define INF 1000000000
 #define MOD 1000000007
 #define MAX 1005
+#define LOG 20
 
 typedef long long ll;
 typedef vector<int> vi;
+typedef vector<ll> vll;
 typedef pair<int, int> ii;
 typedef vector<ii> vii;
 
